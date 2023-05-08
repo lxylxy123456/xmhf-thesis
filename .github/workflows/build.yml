@@ -12,12 +12,7 @@ jobs:
     - name: apt-get
       run: |
         sudo apt-get update && \
-        sudo apt-get install \
-                      texlive texlive-fonts-extra texlive-science \
-                      -y
-    #- name: Tag
-    #  run: |
-    #    sed -i "s/^\\\\copyrighttext{All Rights Reserved}$/\\\\copyrighttext{All Rights Reserved \\\\\\\\ TO""DO: this is a draft \\\\\\\\ commit sha: `git rev-parse HEAD` \\\\\\\\ build date: `date`}/" thesis.tex
+        sudo apt-get install texlive texlive-fonts-extra texlive-science -y
     - name: Build
       run: |
         make
