@@ -1,9 +1,0 @@
-\section{TrustVisor Vulnerability 3: PALs not Destroyed When Restarting}
-\label{sec:vuln_xmhf_tv_restart_clean_pal}
-
-To protect the memory secrecy of PALs, TrustVisor clears their memory when they are unregistered. However, we find that if the rich OS restarts while some PALs are still registered, TrustVisor does not clear the PALs' memory in its restart callback function. Similar to the exploit of TrustVisor vulnerability 2 in Section~\ref{sec:vuln_xmhf_tv_txt_secret}, an attacker can boot a malicious OS and dump the secret memory of PALs.
-
-Note that this vulnerability is distinct from TrustVisor vulnerability 2. The latter applies only when DRTM is enabled and assumes that the attacker can bypass the restart callback function when restarting the machine, for example, by pressing the restart button on the hardware. On the other hand, this vulnerability applies when DRTM is disabled and assumes that the attacker cannot bypass the restart callback function in TrustVisor. Nevertheless, DRTM is essential to defend against an attacker who can bypass the restart callback function.
-
-To fix this vulnerability, we add the logic to clear the memory of all registered PALs in TrustVisor's restart callback function.
-

@@ -1,7 +1,0 @@
-\section{TrustVisor Vulnerability 5: Race Condition when Switching EPTP}
-\label{sec:vuln_xmhf_tv_race_eptp}
-
-By default, XMHF creates separate EPTs for each CPU. However, for implementation convenience, TrustVisor uses the same EPT for all CPUs. When the first PAL is registered, TrustVisor quiesces all other CPUs and modifies their EPT pointers (EPTPs) to point to the same EPT. However, if a CPU is in the process of modifying its EPTP when being quiesced, TrustVisor may fail to modify the CPU's EPTP due to race condition. Consequently, the rich OS can read and write the memory of PALs from the CPU whose EPTP is not modified by TrustVisor.
-
-To fix this vulnerability, we avoid updating EPTPs of one CPU from another CPU. As a workaround, we update the EPT page map level 4 entries (PML4Es) instead. However, we argue that in the long term, it is better for TrustVisor to allow different EPTs for each CPU.
-
