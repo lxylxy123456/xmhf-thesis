@@ -1,0 +1,19 @@
+\section{Code Size}
+\label{sec:evaluation_sloccount}
+
+We measure \XMHF64's TCB through its code size. We measure source lines of code (SLOC) using SLOCCount \cite{wheeler2001sloccount}. We report code size separately with and without VMX virtualization (i.e., virtualizing the hardware virtualization extension). Users who prefer a smaller TCB can configure \XMHF64 during compile time to disable VMX virtualization.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_eval_sloc}
+	\caption{The XMHF and \XMHF64 core code sizes (in SLOCs).}
+	\label{tab:evaluation_sloccount}
+	\end{center}
+\end{table}
+
+The result is shown in \ref{tab:evaluation_sloccount}. When not considering VMX virtualization, \XMHF64's SLOC increases by 4874 SLOCs (83\%). Among the components that have the largest code size increase, the \textit{dmaprot} component increases by 931 SLOCs because \XMHF64 supports more IOMMUs and allows hypapps to use IOMMUs. The \textit{eventhub} component increases by 920 SLOCs because \XMHF64 is required to virtualize various hardware resources to achieve compatibility, as discussed in Section~\ref{sec:impl_compatibility}. The \textit{mm} component contains a newly added memory allocator of 884 SLOCs. If needed, this component can easily switch to a more lightweight implementation to reduce code size.
+
+VMX virtualization adds 5291 SLOCs to the \XMHF64 core. VMCS virtualization consists of around 2691 SLOCs. Intercept virtualization consists of around 1700 SLOCs. EPT virtualization consists of around 560 SLOCs.
+
+We compare \XMHF64's VMX virtualization code size with KVM's nested virtualization in Linux 5.10.84. KVM does not clearly separate code for nested virtualization from code for single level of virtualization, so we only consider source file names that clearly indicate nested virtualization, like \lstinline{nested.c} and \lstinline{vmcs12.c}. We conservatively estimate that KVM's VMX nested virtualization code consists of at least 5095 SLOCs, which is similar to \XMHF64's VMX virtualization code size. KVM virtualizes EPT using a generic MMU component, which consists of an additional 6948 SLOCs.
+

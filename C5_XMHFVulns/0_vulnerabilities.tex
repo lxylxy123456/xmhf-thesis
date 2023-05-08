@@ -1,0 +1,14 @@
+\chapter{TrustVisor Vulnerabilities}
+\label{sec:vulnerabilities_xmhf_tv}
+
+As discussed in Section~\ref{sec:bg_tv}, TrustVisor is a micro-hypervisor ported to run on XMHF \cite{vasudevan2013design}. XMHF version 6.1.0 provides TrustVisor as an example hypapp. During the development of \XMHF64, we find six security vulnerabilities in TrustVisor when running as a hypapp in XMHF.\footnote{The vulnerabilities we find may or may not apply before TrustVisor is ported to run in XMHF, i.e., when TrustVisor runs as a standalone micro-hypervisor.} These vulnerabilities are fixed in \XMHF64, and we backport these fixes to XMHF.
+
+Note that the following vulnerabilities are only what we find while working on this thesis. We do not claim that XMHF, \XMHF64, and TrustVisor have no other vulnerabilities.
+
+\input{C5_XMHFVulns/1_tv1_init_init}
+\input{C5_XMHFVulns/2_tv2_txt_secret}
+\input{C5_XMHFVulns/3_tv3_shutdown}
+\input{C5_XMHFVulns/4_tv4_ept_check}
+\input{C5_XMHFVulns/5_tv5_eptp_switch}
+\input{C5_XMHFVulns/6_tv6_reg_side_channel}
+

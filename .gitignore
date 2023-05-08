@@ -1,0 +1,16 @@
+*.aux
+texput.log
+thesis.bbl
+thesis.blg
+thesis.lof
+thesis.log
+thesis.lot
+thesis.out
+thesis.pdf
+thesis.toc
+thesis.loa
+.~lock.*.csv#
+backup.pdf
+lxy1.tex
+lxy2.tex
+pngs/

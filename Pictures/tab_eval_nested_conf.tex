@@ -1,0 +1,21 @@
+\documentclass{standalone}
+
+\begin{document}
+
+\input{Pictures/common}%
+
+\begin{tabular}{ l | l | l | l }\hline
+Name & L0/mL0 & L1/mL1 & L2 \\ \hline
+0 & Debian (2 GiB) &  &  \\
+1b & Debian (3 GiB), VirtualBox & Debian (2 GiB) &  \\
+1k & Debian (3 GiB), KVM & Debian (2 GiB) &  \\
+1w & Debian (3 GiB), VMware & Debian (2 GiB) &  \\
+1x & \XMHF64 & Debian (2 GiB) &  \\
+2bk & Debian (4 GiB), VirtualBox & Debian (3 GiB), KVM & Debian (2 GiB) \\
+2kk & Debian (4 GiB), KVM & Debian (3 GiB), KVM & Debian (2 GiB) \\
+2wk & Debian (4 GiB), VMware & Debian (3 GiB), KVM & Debian (2 GiB) \\
+2xk & \XMHF64 & Debian (3 GiB), KVM & Debian (2 GiB) \\
+\end{tabular}
+
+\end{document}
+

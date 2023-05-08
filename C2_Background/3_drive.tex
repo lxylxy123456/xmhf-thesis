@@ -1,0 +1,35 @@
+\section{Security Properties Required by the \textsc{DRIVE} Methodology}
+\label{sec:bg_drive}
+
+The \textsc{DRIVE} design methodology \cite{vasudevan2013design} enables formal verification of memory integrity of micro-hypervisors. \textsc{DRIVE} defines six properties that micro-hypervisors must follow. XMHF follows these properties, and it assumes its hypapp also follows these properties. Thus, the memory integrity of XMHF and its hypapp can be formally verified.
+
+\subsection{Modularity}
+\label{subsec:bg_drive_mod}
+
+The modularity property (\textsc{Mod}) consists of two sub-properties. First, when the micro-hypervisor initializes, its $init()$ function needs to be called. Second, when an intercept is triggered, the hardware needs to transfer control to one of the micro-hypervisor's intercept handlers: $ih_1(), ..., ih_k()$.
+
+\subsection{Atomicity}
+\label{subsec:bg_drive_atom}
+
+The atomicity property (\textsc{Atom}) consists of two sub-properties. $\text{\textsc{Atom}}_{init}$ requires that $init()$ is executed at the start of micro-hypervisor initialization in a single-threaded environment. $\text{\textsc{Atom}}_{ih}$ requires that when an intercept handler is running, no other intercept handlers or rich OS/Apps may run.
+
+\subsection{Memory Access Control Protection}
+\label{subsec:bg_drive_mprot}
+
+The memory access control protection property (\textsc{MProt}) mandates the use of a memory access control mechanism ($MacM$) stored in the micro-hypervisor's memory. $MacM$ consists of two hardware access control components: $MacM_G$, which controls memory accesses of the rich OS/Apps, and $MacM_D$, which controls memory accesses of devices.
+
+\subsection{Correct Initialization}
+\label{subsec:bg_drive_init}
+
+The correct initialization property (\textsc{Init}) has two requirements. First, after the micro-hypervisor is initialized, $MacM$ must protect the micro-hypervisor's memory from the rich OS/Apps and devices. Second, the micro-hypervisor must initialize the intercept entry points to point to the correct intercept handlers.
+
+\subsection{Proper Mediation}
+\label{subsec:bg_drive_med}
+
+The proper mediation property (\textsc{Med}) requires that $MacM$ is active whenever untrusted programs or devices may access memory. First, $MacM_G$ must be active when any code in the rich OS/Apps executes. Second, $MacM_D$ must always be active, because devices can access memory at any time.
+
+\subsection{Safe State Updates}
+\label{subsec:bg_drive_safeupd}
+
+The safe state updates property (\textsc{SafeUpd}) requires that when updating the micro-hypervisor's memory and hardware control structures, intercept handlers must ensure that (1) $MacM$ protects the micro-hypervisor's memory, (2) intercept entry points are not modified, and (3) the micro-hypervisor's code is not modified.
+

@@ -1,0 +1,64 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{fit}
+
+\begin{document}
+
+\input{Pictures/common}%
+
+\begin{tikzpicture}
+
+%\Grid{-9}{9}{0}{15}
+
+\node (HW) at (1, 3.125) [rectangle, draw=black, minimum width=12.5cm, minimum height=1cm] {Platform Hardware};
+
+\node (hypapp) at (1, 5.75) [rectangle, draw=black, minimum width=5cm, minimum height=1cm] {hypapp};
+\node (core-st) at (-1.5, 7) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {startup};
+\node (core-pa) at (-1.5, 9) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {partition};
+\node (core-sm) at (-1.5, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {smpguest};
+\node (core-dm) at (4, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {dmaprot};
+\node (core-me) at (4, 9) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {memprot};
+\node (core-ev) at (1, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {eventhub};
+\node (core) at (5, 7) [left] {\XMHF64 Core};
+\node (Core) [rectangle, draw=black, fit={(core-st) (core-pa) (core-sm) (core-dm) (core-me) (core-ev) (core)}] {};
+\node (rt) at (5, 4.75) [left] {\XMHF64 Runtime (64-bit)};
+\node (RT) [rectangle, draw=black, very thick, fit={(Core) (rt) (hypapp)}] {};
+
+\def\lTwoVMsX{-2.5}
+\def\lTwoVMsY{12.5}
+\node (p1l1os) at (-3.75, 11) [rectangle, draw=black, minimum width=2.5cm, minimum height=1cm] {Rich OS/Apps};
+\node (p1l1hv) at (-0.75, 11) [rectangle, draw=black, minimum width=2.5cm, minimum height=1cm, align=center] {General-Purpose \\ Hypervisor};
+\newcommand{\DrawNested}[1]{
+	\node (p1l2#1) at (\lTwoVMsX+0.#1, \lTwoVMsY+0.#1) [rectangle, draw=black, fill=white, minimum width=5cm, minimum height=1cm] {};
+}
+\foreach \x in {4,3,...,0}
+	\DrawNested{\x}
+\node (p1l2) at (\lTwoVMsX, \lTwoVMsY) [rectangle, draw=black, fill=white, minimum width=5cm, minimum height=1cm] {Guest VMs};
+\node (p1) at (-2.125, 14.25) [below] {Primary Partition};
+\node (P1) [rectangle, draw=black, very thick, fit={(p1l24) (p1l1os) (p1l1hv) (p1l2) (p1)}] {};
+\def\partTwoX{4}
+\def\partTwoY{12}
+\newcommand{\DrawSecPart}[1]{
+	\node (p2l1) at (\partTwoX+#1, \partTwoY+#1) [rectangle, minimum width=5cm, minimum height=3cm] {};
+	\node (p2) at (\partTwoX+#1, 14.25+#1) [below] {};
+	\node (P2) [rectangle, draw=black, very thick, fill=white, fit={(p2) (p2l1)}] {};
+}
+\foreach \x in {0.4,0.3,...,0}
+	\DrawSecPart{\x};
+\node (P2) [rectangle, draw=black, very thick, fit={(p2) (p2l1)}] {};
+\node (p2l1) at (\partTwoX, \partTwoY) [rectangle, draw=black, minimum width=5cm, minimum height=3cm] {Isolated Code};
+\node (p2) at (\partTwoX, 14.25) [below] {Secondary Partitions};
+
+\draw[->, ultra thick] (core-ev) -- (hypapp) node [pos=0.2, right] {Callbacks};
+\draw[ultra thick] (p1l1os) |- ++(3.5, -1.25);
+\draw[ultra thick] (p1l1hv) |- ++(2.25, -1.25);
+\draw[->, ultra thick] (p1l2.east) -| (core-ev) node [pos=0.95, right] {Intercepts};
+\draw[ultra thick] (p2l1) |- +(-4.5, -2.25);
+
+\draw[dashed, ultra thick] (-8.5, 4) -- ++(16, 0) node [pos=0, above right] {Micro-hypervisor};
+\draw[dashed, ultra thick] (-8.5, 10) -- ++(16, 0) node [pos=0, above right] {\XMHF64 Partitions};
+
+\end{tikzpicture}
+\end{document}
+

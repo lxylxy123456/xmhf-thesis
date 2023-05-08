@@ -1,0 +1,39 @@
+\subsection{Virtualizing the Hardware Virtualization Extension}
+\label{sec:design_nested_virt}
+
+\XMHF64 relies on the hardware virtualization extension to virtualize CPU and memory. However, modern rich OS/Apps also require the hardware virtualization extension to run hypervisors. Therefore, \XMHF64 must virtualize the hardware virtualization extension to support modern rich OS/Apps.
+
+KVM \cite{ben2010turtles} implements nested virtualization, which includes virtualizing the hardware virtualization extension. \XMHF64 borrows several ideas from this work. However, \XMHF64 does not implement nested virtualization since it does not virtualize I/O devices.
+
+We modify the architecture of XMHF to virtualize the hardware virtualization extension in \XMHF64. The modified \XMHF64 architecture is shown in \ref{fig:xmhf64_arch}. The primary partition can run in two modes: guest VMs of the general-purpose hypervisor run in L2, and the rich OS/Apps and the general-purpose hypervisor run in mL1. \XMHF64 runs in mL0. While mL1 and mL0 are superficially similar to L1 and L0 in nested virtualization \cite{ben2010turtles}, they are actually different because \XMHF64 does not need to virtualize devices. Moreover, the secondary partitions created by hypapps do not need a notion of L2 or mL1 because these hypapps must have low complexity to support their security goals. Specific hypapps can define L2 and mL1 for secondary partitions at the cost of increasing hypapp complexity.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone[width=\textwidth]{xmhf64_arch}
+	\end{center}
+	\caption{\XMHF64 architecture.}
+	\label{fig:xmhf64_arch}
+\end{figure}
+
+\subsubsection{Virtualizing VMCS}
+
+To run the guest VMs, the general-purpose hypervisor provides VMCS12, which defines execution environment transition between the general-purpose hypervisor and the guest VMs. \XMHF64 must translate VMCS12 to VMCS02, which defines the transition between \XMHF64 and the guest VMs.
+
+Translating VMCS12 to VMCS02 depends on the hardware resource represented by each VMCS field. If \XMHF64 exports the resource to the rich OS/Apps, the field can be directly copied from VMCS12 to VMCS02. If \XMHF64 hides the resource from the rich OS/Apps, \XMHF64 needs to modify the field in VMCS02 to prevent the guest VMs from accessing the resource. If \XMHF64 virtualizes the resource, the specific virtualization logic computes the VMCS02 value from VMCS12.
+
+\subsubsection{Virtualizing Intercepts}
+
+The hardware virtualization extension generates intercepts when events occur while the rich OS/Apps, the general-purpose hypervisor, and the guest VMs are running. To virtualize the hardware virtualization extension, \XMHF64 must handle intercepts from the guest VMs correctly. Intercepts from the guest VMs are handled differently from intercepts from the rich OS/Apps and the general-purpose hypervisor.
+
+Similar to KVM \cite{ben2010turtles}, \XMHF64 handles each intercept from the guest VMs in one of two ways, depending on the reason of the intercept. If the intercept is caused by an event related to \XMHF64, \XMHF64 handles the event and resumes executing the guest VMs. Otherwise, \XMHF64 forwards the event to the general-purpose hypervisor. This is done by injecting the intercept into the general-purpose hypervisor.
+
+Some intercepts from the rich OS/Apps cause \XMHF64 to call callback functions in the hypapp, such as HPT violation and I/O port access. When the guest VMs generate these intercepts, \XMHF64 also calls the same callback functions in the hypapp. Hence, the hypapp's callback functions must be updated to handle callbacks from both the rich OS/Apps and the guest VMs correctly. For example, the hypapp must implement different logics when accessing memory of the rich OS/Apps and the guest VMs. The hypapp can access memory of the rich OS/Apps directly, but the memory of the guest VMs can only be accessed after performing the address translation defined by the general-purpose hypervisor.
+
+\subsubsection{Virtualizing HPT}
+
+\XMHF64 uses HPT to enforce memory integrity of the micro-hypervisor. However, modern hypervisors also require HPT to implement memory virtualization. Thus, \XMHF64 must virtualize HPT to support modern hypervisors.
+
+In \XMHF64, HPT01 protects memory integrity of the micro-hypervisor from the rich OS/Apps. The general-purpose hypervisor specifies HPT12, which translates guest VM memory addresses to rich OS/Apps memory addresses. To run the guest VMs, \XMHF64 builds HPT02, which translates guest VM memory addresses to \XMHF64 memory addresses. HPT02 contains the same entries as HPT12, except for the entries that violate memory integrity of the micro-hypervisor. Thus, guest VMs cannot violate memory integrity of the micro-hypervisor.
+
+Similar to KVM \cite{ben2010turtles}, \XMHF64 builds HPT02 on demand. Initially, HPT02 contains no entries. When the guest VMs access memory not in HPT02, \XMHF64 receives an intercept. \XMHF64 checks whether the access violates the micro-hypervisor's memory integrity. If the access is authorized, \XMHF64 computes the HPT02 entry from HPT12 and resumes the guest VMs.
+

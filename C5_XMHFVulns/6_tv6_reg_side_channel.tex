@@ -1,0 +1,15 @@
+\section{TrustVisor Vulnerability 6: Side Channel in Registers}
+\label{sec:vuln_xmhf_tv_reg_side_channel}
+
+We find that during PAL termination, TrustVisor does not clear the CPU registers that may contain secrets of the PAL. This creates a side channel that allows a malicious rich OS/Apps to violate the secrecy of the PAL. As discussed in Section~\ref{sec:bg_tv}, the rich OS/Apps call the PAL through a C function call. According to the 32-bit x86 calling convention \cite{fog_calling_convention}, registers can be categorized into three groups.
+
+\begin{itemize}
+\item \textbf{Callee-saved registers}: For 32-bit PALs, callee-saved registers include EBX, ESI, EDI, and EBP \cite{fog_calling_convention}. During PAL termination, the calling convention requires all callee-saved registers to contain the same value as the value during PAL invocation. TrustVisor assumes that PALs are compiled by a benign compiler following the calling convention, so callee-saved registers do not leak any secret information.
+
+\item \textbf{Scratch register for return values}: For 32-bit PALs, the scratch register for return value is EAX \cite{fog_calling_convention}.\footnote{We assume that PALs only return integers, so the ST(0), XMM0, YMM0, and ZMM0 registers are not for return values.} During PAL termination, this register contains the return value of the PAL. Thus, the scratch register for return values does not leak any secret information.
+
+\item \textbf{Scratch registers not for return values}: For 32-bit PALs, scratch registers not for return values include ECX, EDX, ST(0)-ST(7), XMM0-XMM7, YMM0-YMM7, ZMM0-ZMM7, and K0-K7 \cite{fog_calling_convention}. During PAL termination, the calling convention allows these registers to contain any value. For example, a benign compiler may compile a PAL that uses these registers to compute secret information in the PAL. However, the PAL does not clear these registers when it returns. Thus, a malicious rich OS/Apps can learn about the secret by reading these registers after PAL termination.
+\end{itemize}
+
+To fix this vulnerability, we clear all general-purpose registers (GPRs) that are scratch registers not for return values when the PAL terminates. For 32-bit PALs, we clear ECX and EDX. For 64-bit PALs, we clear RCX, RDX, RSI, RDI, and R8-R11 \cite{fog_calling_convention}. When the PAL is executing, we disable access to the FPU and SIMD instructions. Thus, the PAL cannot access other scratch registers not for return values (i.e., ST(0)-ST(7), XMM0-XMM7, YMM0-YMM7, ZMM0-ZMM7, and K0-K7).
+

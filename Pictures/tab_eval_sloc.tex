@@ -1,0 +1,28 @@
+\documentclass{standalone}
+
+\begin{document}
+
+\input{Pictures/common}%
+
+\begin{tabular}{ l | r | r | r }\hline
+ & XMHF & \XMHF64 & \XMHF64 \\ \hline
+VMX virtualization & No & No & Yes \\ \hline
+top dir & 25 & 61 & 61 \\
+xmhf-baseplatform & 1229 & 1866 & 2076 \\
+xmhf-debug & 123 & 213 & 213 \\
+xmhf-dmaprot & 811 & 1742 & 1742 \\
+xmhf-eventhub & 815 & 1735 & 1877 \\
+xmhf-memprot & 538 & 951 & 954 \\
+xmhf-mm &  & 884 & 884 \\
+xmhf-nested &  &  & 4888 \\
+xmhf-partition & 674 & 961 & 992 \\
+xmhf-smpguest & 807 & 1089 & 1106 \\
+xmhf-startup & 147 & 312 & 312 \\
+xmhf-tpm & 445 & 135 & 135 \\
+xmhf-xcphandler & 229 & 407 & 407 \\
+xmhf-xmhfcbackend & 17 & 378 & 378 \\ \hline
+Total & 5860 & 10734 & 16025 \\
+\end{tabular}
+
+\end{document}
+

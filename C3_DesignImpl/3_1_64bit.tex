@@ -1,0 +1,7 @@
+\subsection{64-bit Support}
+\label{sec:design_impl_64bit}
+
+XMHF statically maps all 4 GiB of memory that can be accessed by a 32-bit rich OS/Apps. However, \XMHF64 cannot map all possible 64-bit memory addresses due to the large address space. Therefore, \XMHF64 requires configuration of the maximum memory address at compile time. \XMHF64 maps all memory below this configured maximum memory address.
+
+\XMHF64 must support both 32-bit and 64-bit rich OS/Apps \cite{intel_sdm}. Thus, \XMHF64 implements new APIs for hypapps to query the mode of the running rich OS/Apps. These new APIs allow hypapps to distinguish between 32-bit and 64-bit rich OS/Apps and take appropriate action. For example, TrustVisor uses these APIs to use different calling conventions for 32-bit PALs and 64-bit PALs.
+

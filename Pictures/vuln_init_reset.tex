@@ -1,0 +1,52 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{fit}
+
+\definecolor{lightblue}{HTML}{cfe2f3}
+
+\begin{document}
+
+\input{Pictures/common}
+
+\begin{tikzpicture}
+
+%\Grid{-1}{12}{-10}{1}
+
+\def\xl{0}
+\def\xm{5}
+\def\xr{10}
+\def\yt{0}
+\VulnInitDef
+
+\edef\yc{-1}
+\VulnInitCross{\xl}{\xm}{\yc}{Request restart};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitCross{\xm}{\xl}{\yc}{INIT};
+\VulnInitCross{\xm}{\xr}{\yc}{INIT};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitSelf{\xl}{\yc}{Intercept \\ (i.e., VM-exit)};
+\VulnInitSelf{\xr}{\yc}{Intercept \\ (i.e., VM-exit)};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitSelf{\xl}{\yc}{VMXOFF};
+\VulnInitSelf{\xr}{\yc}{VMXOFF};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitCross{\xl}{\xm}{\yc}{Request restart};
+\VulnInitCross{\xr}{\xm}{\yc}{Request restart};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitCross{\xm}{\xl}{\yc}{INIT};
+\VulnInitCross{\xm}{\xr}{\yc}{INIT};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+\VulnInitSelf{\xl}{\yc}{Reset CPU};
+\VulnInitSelf{\xr}{\yc}{Reset CPU};
+\edef\yc{\yc - \VulnInitA - \VulnInitC}
+
+\def\yb{\yc}
+\draw[->, ultra thick] (-2.5, {\yt/2+(\yb)/2 + 1}) -- ++(0, -2) node [right, pos=0.5] {Time};
+\draw[thick] (\xl, \yb) -- (\xl, \yt) node [above, align=center] {CPU 1 \\ Running rich OS};
+\draw[thick] (\xm, \yb) -- (\xm, \yt) node [above, align=center] {Hardware \\ };
+\draw[thick] (\xr, \yb) -- (\xr, \yt) node [above, align=center] {CPU 2 \\ Running rich OS};
+
+\end{tikzpicture}
+\end{document}
+

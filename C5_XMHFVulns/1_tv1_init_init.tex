@@ -1,0 +1,39 @@
+\section{TrustVisor Vulnerability 1: INIT Interrupt During Restart}
+\label{sec:vuln_xmhf_tv_init_twice}
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone{vuln_init_smp}
+	\end{center}
+	\caption{Use of INIT and SIPI interrupts during SMP boot.}
+	\label{fig:vuln_init_smp}
+\end{figure}
+
+In the x86 micro-architecture, when VMX is disabled, the INIT interrupt resets the CPU. It is commonly used to initialize symmetric multiprocessing (SMP), as depicted in \ref{fig:vuln_init_smp}. The procedure comprises of two steps. First, CPU 1 sends an INIT interrupt to CPU 2 to reset it. Second, CPU 1 sends a start-up interprocessor interrupt (SIPI) to CPU 2 to boot it. The SIPI interrupt includes the location of the boot code to be executed on CPU 2 \cite{intel_sdm}.
+
+The behavior of INIT interrupts changes when VMX is enabled, as defined in \cite{intel_sdm}. When the CPU is running in host mode (i.e., XMHF and TrustVisor), INIT interrupts are blocked by hardware. When the CPU is running in guest mode (i.e., rich OS/Apps and isolated code), INIT interrupts cause intercepts.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone{vuln_init_reset}
+	\end{center}
+	\caption{Normal XMHF and TrustVisor restart process.}
+	\label{fig:vuln_init_reset}
+\end{figure}
+
+The restart process of XMHF and TrustVisor is illustrated in \ref{fig:vuln_init_reset}. First, the rich OS sends a restart request to one of the available hardware, such as the PS/2 keyboard controller or the ACPI reset register \cite{acpi_spec}. Although the rich OS can send the restart request to any hardware, XMHF assumes that the hardware tries to reset all CPUs by sending them INIT interrupts. Since VMX is enabled on all CPUs, the INIT interrupts trigger INIT intercepts in XMHF. On each CPU, XMHF's INIT intercept handler invokes TrustVisor's restart callback function. This function disables VMX on the CPU using the leave VMX operation (VMXOFF) instruction and sends a restart request to the PS/2 keyboard controller. Since VMX is disabled, the hardware can successfully reset all CPUs through INIT interrupts.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone{vuln_init_exploit}
+	\end{center}
+	\caption{Exploiting the TrustVisor vulnerability using INIT interrupts.}
+	\label{fig:vuln_init_exploit}
+\end{figure}
+
+As illustrated in \ref{fig:vuln_init_exploit}, the security vulnerability arises when CPU 2 disables VMX but has not requested the PS/2 keyboard controller to restart, and CPU 1 sends an INIT interrupt to CPU 2. This results in resetting CPU 2. CPU 1 can then send an SIPI interrupt to boot the CPU 2 with malicious code, which can read and write any memory, including the micro-hypervisor's memory and PALs' memory. This is not a vulnerability of XMHF because TrustVisor's restart callback function fails to quiesce other CPUs.
+
+This vulnerability can only be exploited when DRTM is disabled. DRTM in Intel CPUs is implemented through Intel Trusted Execution Technology (TXT). In DRTM, when one CPU with VMX disabled receives an INIT interrupt, Intel TXT shutdown is triggered and all CPUs are reset \cite{intel_txt}.
+
+To fix this vulnerability, TrustVisor synchronizes all CPUs before disabling VMX. This way, the attacker cannot send the SIPI interrupt to any CPU after VMX is disabled, thereby preventing the execution of attacker-controlled code in host mode.
+

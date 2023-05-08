@@ -1,0 +1,11 @@
+\section{Security Model}
+\label{sec:security_model}
+
+\XMHF64 has a similar security model to XMHF \cite{vasudevan2013design}. The goal of \XMHF64 is to protect memory integrity of the micro-hypervisor (i.e., \XMHF64 and its hypapp).
+
+\XMHF64 has the same threat model as XMHF. The attacker can control the rich OS/Apps and I/O devices, and run his/her own isolated code. \XMHF64 assumes that the attacker is remote, i.e., does not have physical access to the hardware. An attacker can attempt to attack memory integrity of the micro-hypervisor by (1) attacking \XMHF64's initialization, (2) accessing memory from the rich OS/Apps or isolated code, (3) accessing memory from I/O devices, and (4) generating intercepts that will be handled by \XMHF64.
+
+Similar to XMHF, \XMHF64 assumes the control flow integrity (CFI) of \XMHF64. However, future work is required to prove and enforce this property.
+
+\XMHF64 assumes that the hardware and firmware are trusted. We consider hardware vulnerabilities like Spectre \cite{kocher2020spectre} and Meltdown \cite{lipp2018meltdown} as out of scope. \XMHF64 also does not protect against denial-of-service attacks.
+

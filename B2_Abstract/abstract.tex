@@ -1,0 +1,6 @@
+\abstract
+
+Micro-hypervisors are used in many research projects to improve the security of computer systems. For example, some micro-hypervisors can separate security-sensitive programs from commodity operating systems, which typically consist of millions of lines of code. Thus, the security-sensitive programs are secure even if the operating systems are compromised. XMHF is a micro-hypervisor framework for the x86 micro-architecture that allows developers to extend it into customized micro-hypervisors. Unfortunately, XMHF does not support the latest commodity operating systems and hardware.
+
+This thesis presents an enhancement of XMHF, called \XMHF64, which addresses the compatibility issues mentioned above and introduces new features. \XMHF64 extends its support to 64-bit modern operating systems such as Windows 10 and Debian 11, as well as modern chipsets with TPM 2.0. Moreover, \XMHF64 virtualizes the hardware virtualization extension, enabling popular hypervisors such as KVM, VMware, VirtualBox, and Hyper-V to run on top of it. \XMHF64 maintains the design principles of XMHF, making it possible to verify its memory integrity as future work.
+

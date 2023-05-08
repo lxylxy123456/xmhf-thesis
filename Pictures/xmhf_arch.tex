@@ -1,0 +1,56 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{fit}
+
+\begin{document}
+
+\input{Pictures/common}%
+
+\begin{tikzpicture}
+
+%\Grid{-9}{9}{0}{15}
+
+\node (HW) at (1, 2) [rectangle, draw=black, minimum width=15cm, minimum height=1cm] {Platform Hardware};
+
+\node (hypapp) at (0.5, 5.5) [rectangle, draw=black, minimum width=5cm, minimum height=1cm] {hypapp};
+\node (core-st) at (-3, 7) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {startup};
+\node (core-pa) at (-3, 9) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {partition};
+\node (core-sm) at (-3, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {smpguest};
+\node (core-dm) at (4.5, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {dmaprot};
+\node (core-me) at (4.5, 9) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {memprot};
+\node (core-ev) at (0.5, 8) [rectangle, draw=black, minimum width=2cm, minimum height=0.5cm] {eventhub};
+\node (core) at (5.5, 7) [left] {XMHF Core};
+\node (Core) [rectangle, draw=black, fit={(core-st) (core-pa) (core-sm) (core-dm) (core-me) (core-ev) (core)}] {};
+\node (rt) at (5.75, 4) [left] {XMHF Runtime (32-bit)};
+\node (RT) [rectangle, draw=black, very thick, fit={(Core) (rt) (hypapp)}] {};
+
+\node (p1l1os) at (-4, 11) [rectangle, draw=black, minimum width=5cm, minimum height=1cm] {Rich OS};
+\node (p1l1apps) at (-4, 12.5) [rectangle, draw=black, minimum width=5cm, minimum height=1cm] {Apps};
+\node (p1) at (-4, 13.75) [below] {Primary Partition};
+\node (P1) [rectangle, draw=black, very thick, fit={(p1l1os) (p1l1apps) (p1)}] {};
+
+\def\partTwoX{5.5}
+\def\partTwoY{11.5}
+\newcommand{\DrawSecPart}[1]{
+	\node (p2l1) at (\partTwoX+#1, \partTwoY+#1) [rectangle, minimum width=5cm, minimum height=2cm] {};
+	\node (p2) at (\partTwoX+#1, 13.25+#1) [below] {};
+	\node (P2) [rectangle, draw=black, very thick, fill=white, fit={(p2) (p2l1)}] {};
+}
+\foreach \x in {0.4,0.3,...,0}
+	\DrawSecPart{\x};
+\node (P2) [rectangle, draw=black, very thick, fit={(p2) (p2l1)}] {};
+\node (p2l1) at (\partTwoX, \partTwoY) [rectangle, draw=black, minimum width=5cm, minimum height=2cm] {Isolated Code};
+\node (p2) at (\partTwoX, 13.25) [below] {Secondary Partitions};
+
+\draw[->, ultra thick] (core-ev) -- (hypapp) node [pos=0.3, right] {Callbacks};
+\draw[->, ultra thick] (p1l1os) -| (core-ev) node [pos=0.95, above right] {Intercepts};
+\draw[->, ultra thick] (p1l1apps) -| (core-ev);
+\draw[->, ultra thick] (p2l1) -| (core-ev);
+
+\draw[dashed, ultra thick] (-10.5, 3) -- ++(20, 0) node [pos=0, above right] {Micro-hypervisor};
+\draw[dashed, ultra thick] (-10.5, 10) -- ++(20, 0) node [pos=0, above right] {XMHF Partitions};
+
+\end{tikzpicture}
+\end{document}
+

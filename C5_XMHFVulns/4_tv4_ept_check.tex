@@ -1,0 +1,7 @@
+\section{TrustVisor Vulnerability 4: Incorrect Memory Access Check during PAL Registration}
+\label{sec:vuln_xmhf_tv_ept_check}
+
+During PAL registration, the rich OS/Apps specify the memory regions of the PAL. TrustVisor must check that the rich OS/Apps are allowed to access the memory regions before adding them to the PAL. However, we discover a typo in this check that allows the rich OS/Apps to specify memory regions that are inaccessible to them. As a result, an attacker can register a malicious PAL and read and write memory of other PALs, TrustVisor, and XMHF from within the malicious PAL. This violates the memory separation property of TrustVisor and the memory integrity of the micro-hypervisor.
+
+To fix this vulnerability, we fix the typo in the check during PAL registration.
+

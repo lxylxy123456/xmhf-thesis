@@ -1,0 +1,49 @@
+\subsection{Compatibility}
+\label{sec:impl_compatibility}
+
+As discussed in Section~\ref{sec:design_compatibility}, for each hardware resource, \XMHF64 determines the policy for rich OS/Apps to access the resource with one of the following three policies: exporting, hiding, and virtualizing.
+
+\subsubsection{CPU}
+
+For CPU instructions, \XMHF64 virtualizes all VMX instructions, as well as the read from model specific register (RDMSR), write to model specific register (WRMSR), and CPU identification (CPUID) instructions. \XMHF64 hides all Safer Mode Extensions (SMX) instructions. All other instructions are exported to the rich OS/Apps.
+
+\begin{itemize}
+\item \XMHF64 virtualizes VMX instructions. \XMHF64 uses VMX to enforce memory integrity of the micro-hypervisor, and rich OS/Apps use VMX to run general-purpose hypervisors.
+
+\item \XMHF64 virtualizes the RDMSR and WRMSR instructions to virtualize model specific registers (MSRs).
+
+\item \XMHF64 virtualizes the CPUID instruction to hide hardware resources from the rich OS/Apps. The rich OS/Apps detect the availability of many hardware resources through the CPUID instruction. When the rich OS/Apps execute the CPUID instruction, VMX generates an intercept, and \XMHF64 returns a modified CPUID result that hides hardware resources from the rich OS/Apps.
+
+\item \XMHF64 hides SMX instructions (i.e., GETSEC). SMX instructions are used to perform DRTM, and rich OS/Apps do not require DRTM.
+
+\item One compatibility bug in XMHF is due to not handling the invalidate process-context identifier (INVPCID), read time-stamp counter and processor ID (RDTSCP), and restore processor extended states supervisor (XRSTORS) instructions correctly. The rich OS/Apps can detect the availability of these instructions through CPUID. XMHF does not change the result of CPUID, but XMHF disables these instructions in the VMX configuration. Thus, the rich OS/Apps crashes when accessing these instructions. \XMHF64 corrects the VMX configuration to export these instructions to the rich OS/Apps.
+\end{itemize}
+
+For CPU registers, XMHF virtualizes a subset of MSRs, as discussed below. All other CPU registers are exported to the rich OS/Apps, including all general-purpose registers, control registers, floating-point unit (FPU) registers, single instruction, multiple data (SIMD) registers, and all other MSRs.
+
+\begin{itemize}
+\item \XMHF64 virtualizes the memory type range registers (MTRR) MSRs. \XMHF64 uses MTRRs to control memory caching when accessing memory. Thus, \XMHF64 virtualizes MTRRs and uses EPT memory type bits to control memory caching when the rich OS/Apps access memory. One compatibility bug in XMHF occurs because XMHF does not virtualize MTRRs. Instead, XMHF exports MTRRs to the rich OS/Apps. As a result, XMHF crashes when a modern rich OS accesses memory-mapped I/O with incorrect caching.
+
+\item \XMHF64 virtualizes the extended feature enable register (EFER) MSR. \XMHF64 requires EFER to run correctly in 64-bit mode. The rich OS/Apps also requires EFER to run in 64-bit mode. Thus, \XMHF64 virtualizes EFER.
+
+\item \XMHF64 virtualizes the \lstinline{BIOS_UPDT_TRIG} MSR, which controls CPU microcode update. \XMHF64 must verify the CPU microcode update to prevent the rich OS/Apps from loading malicious CPU microcode updates to the CPU.
+\end{itemize}
+
+For CPU interrupts, \XMHF64 only virtualizes NMIs. \XMHF64 requires NMIs to implement quiescing, but rich OS/Apps require NMIs to handle non-recoverable errors from the hardware. \XMHF64 exports all maskable interrupts to the rich OS/Apps.
+
+For the Advanced Programmable Interrupt Controller (APIC), \XMHF64 only virtualizes the interrupt command register (ICR) register in APIC. The rich OS/Apps require the ICR to send interrupts between CPUs, and \XMHF64 uses the ICR to send NMIs to other CPUs to implement quiescing. All other registers in APIC are exported to the rich OS/Apps.
+
+For the input-output memory management unit (IOMMU), \XMHF64 hides it from the rich OS/Apps. \XMHF64 requires the IOMMU to protect the micro-hypervisor's memory from devices. \XMHF64 modifies the Advanced Configuration and Power Interface (ACPI) table to prevent the rich OS/Apps from detecting the IOMMU. \XMHF64 also removes the memory addresses of the IOMMU from EPT to prevent malicious rich OS/Apps from accessing it. However, hiding the IOMMU may break the compatibility of future rich OS/Apps, so virtualization of the IOMMU is left as future work.
+
+\subsubsection{Memory}
+
+Same as XMHF, \XMHF64 separates memory into two regions: one for the micro-hypervisor, and one for \XMHF64 partitions. The first region is hidden from the rich OS/Apps, and the second region is exported to the rich OS/Apps. During \XMHF64 initialization, EPT is configured to protect the micro-hypervisor's memory from the rich OS/Apps.
+
+Operating systems booted by BIOS use E820 to detect memory, as specified by ACPI \cite{acpi_spec}. Same as XMHF, \XMHF64 modifies E820 records to hide the micro-hypervisor's memory. Thus, benign rich OS/Apps do not attempt to access the micro-hypervisor's memory.
+
+Operating systems booted by UEFI use the \lstinline{GetMemoryMap} function to detect memory. The support for UEFI in \XMHF64 is left as future work. We plan to hide the micro-hypervisor's memory by providing a wrapper function to rich OS/Apps booted by UEFI. The wrapper function calls \lstinline{GetMemoryMap} and modifies the result to hide the micro-hypervisor's memory.
+
+\subsubsection{I/O Devices}
+
+Same as XMHF, \XMHF64 exports all I/O devices to the rich OS/Apps. \XMHF64 configures EPT to export all memory-mapped I/O to the rich OS/Apps. \XMHF64 configures VMCS to export all I/O ports to the rich OS/Apps. Thus, as a micro-hypervisor, \XMHF64 does not perform any device virtualization.
+

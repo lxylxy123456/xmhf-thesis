@@ -1,0 +1,15 @@
+\section{Incompatibility due to Hardware and Hypapp}
+\label{sec:discussion_compatibility_challenge}
+
+\subsection{Incompatibility due to Hardware}
+
+XMHF and \XMHF64 assume that the hardware is backward-compatible. For example, the x86 instruction set architecture (ISA) is backward-compatible. Thus, if XMHF and \XMHF64 can run on an old x86 CPU, ideally they should be able to run on a new x86 CPU without modification.
+
+Unfortunately, modern hardware makes two changes that break backward compatibility, affecting the compatibility of XMHF and \XMHF64. First, modern hardware updates from TPM 1.2 to TPM 2.0, which is not backward-compatible. However, XMHF only supports TPM 1.2, so it cannot run on modern hardware that uses TPM 2.0. In \XMHF64, we update the TPM-related code to support TPM 2.0.
+
+Second, modern hardware introduces backward compatibility issues in the boot process. There are two methods for booting an operating system on x86 hardware: Compatibility Support Module (CSM) booting and UEFI booting. While older hardware supports both CSM and UEFI booting, newer hardware only supports UEFI booting \cite{intel_drop_bios}. Currently, XMHF and \XMHF64 only support CSM booting, which makes them incompatible with the latest hardware. We plan to add UEFI booting support in \XMHF64 in future work.
+
+\subsection{Incompatibility due to Hypapp}
+
+We find another compatibility issue due to TrustVisor. TrustVisor assumes that once a PAL is created, the rich OS/Apps do not access the memory of the PAL. However, sometimes the SysMain service in Windows 10 accesses the PAL's memory, which violates TrustVisor's memory separation property. Windows 10 uses this service to perform a novel physical memory management technique called SuperFetch \cite{yosifovich2017windows}. In the short term, we fix this problem by disabling the SysMain service in Windows 10 before running PALs. However, we argue that in the long term, TrustVisor should relax its assumptions to accommodate modern OSes.
+

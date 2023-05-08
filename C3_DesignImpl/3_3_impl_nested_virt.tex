@@ -1,0 +1,68 @@
+\subsection{Virtualizing the Hardware Virtualization Extension}
+\label{sec:impl_nested_virt}
+
+As discussed in Section~\ref{sec:design_nested_virt}, to support running guest VMs, \XMHF64 must virtualize VMCS, intercepts, and HPT.
+
+\subsubsection{Virtualizing VMCS}
+
+The general-purpose hypervisor defines the execution environment transition between the general-purpose hypervisor and the guest VMs through VMCS12. \XMHF64 translates all fields in VMCS12 to VMCS02, which defines the transition between \XMHF64 and the guest VMs.
+
+In VMX, VMCS contains four types of fields, as mentioned in Section~\ref{sec:bg_hvm}: guest-state fields, host-state fields, control fields, and information fields. \XMHF64 handles each type of fields differently when virtualizing VMCS.
+
+The guest-state fields of VMCS12 define the state of the guest VMs. \XMHF64 copies all the guest-state fields to VMCS02.
+
+The host-state fields of VMCS12 define the state of the general-purpose hypervisor. However, when an intercept happens, VMX must execute the intercept handler of \XMHF64. Thus, \XMHF64 replaces all host-state fields with the state of \XMHF64 in VMCS02.
+
+The control fields of VMCS12 define the behavior of the CPU when the guest VMs are running. \XMHF64 hides and virtualizes some VMX control fields, as discussed below. All other control fields are directly copied to VMCS02.
+
+\begin{itemize}
+\item The MSR load and store control fields and the MSR bitmap control field are virtualized. Both \XMHF64 and the general-purpose hypervisor require these control fields to virtualize MSRs.
+
+\item The EPT pointer (EPTP) and virtual-processor identifier (VPID) control fields are virtualized. \XMHF64 requires EPTP and VPID to enforce the memory integrity of \XMHF64 and its hypapp. The general-purpose hypervisor also requires EPTP and VPID to virtualize memory.
+
+\item The accessed and dirty flags for EPT control field is hidden from the general-purpose hypervisor. This control field cannot be virtualized under the way \XMHF64 virtualizes EPT. Nevertheless, the general-purpose hypervisor does not require this control field.
+
+\item The control fields that specify memory addresses of the general-purpose hypervisor are virtualized. \XMHF64 must check these addresses to ensure the memory integrity of the micro-hypervisor. If these addresses do not violate the memory integrity of the micro-hypervisor, \XMHF64 directly copies the content of the control fields from VMCS12 to VMCS02.
+
+\item VM-execution control bits related to NMI and the VM-entry interruption-information field are virtualized. \XMHF64 requires these fields to virtualize NMI interrupts when the guest VMs are running. The VM-execution control bits related to NMI allow \XMHF64 to receive all NMIs. The VM-entry interruption-information field allows \XMHF64 to inject NMIs into the guest VMs.
+
+\end{itemize}
+
+When an intercept from the guest VMs occurs, the hardware writes information related to the intercept to the information fields of VMCS02. As discussed below, if \XMHF64 decides to inject the intercept into the general-purpose hypervisor, \XMHF64 copies the information fields of VMCS02 to VMCS12.
+
+\subsubsection{Virtualizing Intercepts}
+
+How \XMHF64 handles an intercept from the guest VMs depends on the event that causes the intercept. The following events in guest VMs are related to \XMHF64, so \XMHF64 handles intercepts caused by these events differently. Other events are not related to \XMHF64, so \XMHF64 simply forwards these events to the general-purpose hypervisor.
+
+\begin{itemize}
+\item EPT violation is related to \XMHF64 because \XMHF64 virtualizes EPT.
+
+\item NMI interrupt and NMI window are related to \XMHF64 because \XMHF64 virtualizes NMIs. The NMI interrupt intercept allows \XMHF64 to handle all NMIs received by the CPU. The NMI window intercept allows \XMHF64 to correctly inject NMIs into the rich OS/Apps.
+
+\item Execution of the CPUID, IN, OUT, and VMCALL instructions is related to \XMHF64 because these instructions are part of the interface between \XMHF64 partitions and hypapps. \XMHF64 virtualizes these intercepts so that the guest VMs can detect the presence of the hypapp through CPUID and interact with the hypapp through IN, OUT, and VMCALL.
+
+\item Execution of the WRMSR and RDMSR instructions is related to \XMHF64 because \XMHF64 virtualizes the MSR bitmap.
+\end{itemize}
+
+\subsubsection{Virtualizing HPT}
+
+In VMX, HPT is implemented through EPT. \XMHF64 uses EPT01 to enforce memory integrity of the micro-hypervisor. When the rich OS/Apps and the general-purpose hypervisor are running, EPT does not need to be virtualized. Thus, \XMHF64 directly loads EPT01 to VMX.
+
+When guest VMs are running, \XMHF64 must virtualize EPT. \XMHF64 requires EPT to enforce memory integrity of the micro-hypervisor, but the general-purpose hypervisor also requires EPT to virtualize memory. The general-purpose hypervisor provides \XMHF64 with EPT12, which translates guest VM memory addresses to rich OS/Apps memory addresses. \XMHF64 then translates EPT12 to EPT02 by removing memory addresses that cannot be accessed through EPT01. EPT02 is provided to VMX to execute the guest VMs. Thus, \XMHF64 guarantees that the memory addresses accessible through EPT02 are always a subset of the memory addresses accessible through EPT01, ensuring that the guest VMs do not violate memory integrity of the micro-hypervisor.
+
+Similar to KVM \cite{ben2010turtles}, \XMHF64 builds EPT02 on-the-fly. Initially, EPT02 is empty when a guest VM is launched. When the guest VM accesses memory that corresponds to an empty entry in EPT02, it triggers an EPT violation intercept. In the EPT violation intercept handler, \XMHF64 checks the corresponding entry in EPT12. If the entry in EPT12 is valid and translates the guest VM address to a general-purpose hypervisor address, \XMHF64 computes the empty entry in EPT02 using the general-purpose hypervisor address and retries the instruction in the guest VM that causes the EPT violation. However, if the entry in EPT12 is invalid, \XMHF64 forwards the EPT violation to the general-purpose hypervisor.
+
+However, unlike KVM, \XMHF64 does not track changes in EPT12 and update EPT02 dynamically. Instead, when the general-purpose hypervisor executes the INVEPT instruction, \XMHF64 removes all entries in EPT02. The VMX specification requires the general-purpose hypervisor to execute the INVEPT instruction after a valid entry in EPT12 is changed or removed. Although removing all entries in EPT02 when the general-purpose hypervisor executes INVEPT results in high run time overhead for \XMHF64, it avoids communication between intercept handlers of different CPUs and enables quiescing.
+
+\subsubsection{Updating TrustVisor}
+
+TrustVisor must be updated to support launching PALs from the guest VMs. To enable this, we make the following changes to TrustVisor.
+
+\begin{itemize}
+\item TrustVisor must distinguish between EPT01 and EPT02. TrustVisor must use EPT02 to read or write guest VMs' memory and use EPT01 to add or remove memory from the primary partition. In contrast, when PALs are launched from the rich OS/Apps, EPT01 is always used.
+
+\item TrustVisor must ensure that when PALs are running, asynchronous events do not cause intercepts that are forwarded to the general-purpose hypervisor. For example, the general-purpose hypervisor may configure VMCS12 to generate intercepts when interrupts arrive at the CPU. Thus, TrustVisor must modify VMCS02 to block all interrupts when PALs are running.
+\end{itemize}
+
+A limitation of supporting launching PALs from the guest VMs is related to memory locking. TrustVisor requires that the memory of PALs must not be swapped. Before a PAL is registered by the rich OS/Apps, the \lstinline{mlock} system call is used to prevent the rich OS from swapping the PAL's memory. However, when a PAL is registered by the guest VMs, there is no standard way to prevent the general-purpose hypervisor from swapping the PAL's memory. Currently, TrustVisor halts when this situation occurs, as TrustVisor's memory separation policy does not allow the general-purpose hypervisor, which is located in the \XMHF64 primary partition, to access the memory of the PAL, which is located in an \XMHF64 secondary partition.
+

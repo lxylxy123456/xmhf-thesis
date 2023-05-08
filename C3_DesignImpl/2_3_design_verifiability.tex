@@ -1,0 +1,40 @@
+\subsection{Verifiability}
+\label{sec:design_verifiability}
+
+As discussed in Section~\ref{sec:bg_drive}, memory integrity of XMHF and its hypapp is formally verified using the \textsc{DRIVE} methodology \cite{vasudevan2013design}. To ensure verifiability, \XMHF64 also follows all properties required by \textsc{DRIVE}. Furthermore, \XMHF64 aims to minimize the virtualization of hardware resources to reduce complexity and facilitate formal verification. It should be noted that formal verification of \XMHF64 is left as future work.
+
+\subsubsection{Modularity}
+
+\XMHF64 preserves both sub-properties of the modularity property (\textsc{Mod}). First, \XMHF64 maintains the initialization logic of XMHF. During dynamic root of trust measurement (DRTM), the CPU transfers control to \XMHF64's $init()$ function in the same way as it does for XMHF. Second, \XMHF64 uses the same intercept handling approach as XMHF. \XMHF64 only modifies existing intercept handlers and adds new ones as required. When an intercept is triggered, the hardware still transfers control to one of \XMHF64's intercept handlers.
+
+\subsubsection{Atomicity}
+
+\XMHF64 preserves both sub-properties of the atomicity property (\textsc{Atom}), i.e., $\text{\textsc{Atom}}_{init}$ and $\text{\textsc{Atom}}_{ih}$. Similar to XMHF, \XMHF64 utilizes hardware support (i.e., DRTM) to ensure atomicity during boot. The hardware ensures that $init()$ is called with only one CPU running and interrupts disabled, thus preserving $\text{\textsc{Atom}}_{init}$.
+
+\XMHF64 preserves $\text{\textsc{Atom}}_{ih}$ through a similar quiescing mechanism as XMHF. Each intercept handler can execute independently without interaction with other intercept handlers or partitions.
+\XMHF64 follows the quiesce implementation of XMHF where each CPU quiesces all other CPUs before running the intercept handler. The other CPUs enter a busy wait loop until the first CPU completes the intercept handler. This mechanism preserves $\text{\textsc{Atom}}_{ih}$ because while one CPU is executing the intercept handler, all other CPUs are in the busy wait loop.
+
+\subsubsection{Memory Access Control Protection}
+
+\XMHF64 satisfies the memory access control protection property (\textsc{MProt}). Similar to XMHF, \XMHF64 enforces the micro-hypervisor's memory integrity through the $MacM$ mechanism. $MacM$ consists of two components: $MacM_G$ and $MacM_D$, which respectively control memory accesses of \XMHF64 partitions and devices.
+
+\XMHF64 extends $MacM_G$ to support running guest VMs. In XMHF, HPT always protects the micro-hypervisor's memory from the rich OS/Apps. In \XMHF64, HPT01 and HPT02 respectively always protect the micro-hypervisor's memory from the rich OS/Apps and the guest VMs. Both HPT01 and HPT02 are stored in \XMHF64 memory. The implementation of $MacM_D$ in \XMHF64 remains the same as in XMHF because \XMHF64 does not deal with device virtualization.
+
+\subsubsection{Correct Initialization}
+
+\XMHF64 satisfies the correct initialization property (\textsc{Init}). \XMHF64 does not modify the initialization code for intercept handlers in XMHF, so the \textsc{Init} property of XMHF ensures that intercept entry points point to the correct intercept handlers. The initialization logic from XMHF also ensures that HPT01 protects the micro-hypervisor's memory after initialization. \XMHF64 initializes HPT02 to reject all memory accesses from guest VMs, which means that HPT02 initially protects the micro-hypervisor's memory. Therefore, $MacM_G$ protects the micro-hypervisor's memory. The initialization logic from XMHF also ensures that $MacM_D$ protects the micro-hypervisor's memory after initialization.
+
+\subsubsection{Proper Mediation}
+
+\XMHF64 satisfies the proper mediation property (\textsc{Med}). When guest VMs are running, \XMHF64 ensures that HPT02 is active. When the rich OS/Apps and the general-purpose hypervisor are running, \XMHF64 ensures that HPT01 is active. Thus, $MacM_G$ is always active when the \XMHF64 primary partition is running. The logic from XMHF also ensures that $MacM_G$ is active when \XMHF64 secondary partitions are running.
+
+Same as XMHF, \XMHF64 activates $MacM_D$ during initialization and never deactivates it. Thus, the memory accesses of devices are always controlled by $MacM_D$.
+
+\subsubsection{Safe State Updates}
+
+\XMHF64 satisfies all three requirements of the safe state updates property (\textsc{SafeUpd}). As mentioned in Section \ref{subsec:bg_drive_safeupd}, intercept handlers in \XMHF64 must ensure that (1) $MacM$ protects the micro-hypervisor's memory, (2) intercept entry points are not modified, and (3) \XMHF64's code is not modified.
+
+For (1), \XMHF64 follows the well-defined interfaces provided by XMHF when modifying HPT01. These interfaces ensure that HPT01 always protects the micro-hypervisor's memory. \XMHF64 only modifies HPT02 by constructing its entries from HPT01. As a result, \XMHF64 guarantees that the memory addresses in HPT02 are always a subset of HPT01. Thus, $MacM_G$ always protects the micro-hypervisor's memory. \XMHF64 also follows the well-defined interfaces in XMHF when modifying $MacM_D$.
+
+For (2) and (3), \XMHF64 intercept handlers never modify intercept entry points or \XMHF64 code. Thus, the Safe State Updates property is preserved.
+

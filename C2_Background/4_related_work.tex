@@ -1,0 +1,15 @@
+\section{Related Work}
+\label{sec:bg_related_work}
+
+Lockdown \cite{vasudevan2012lockdown} is a micro-hypervisor that implements separation between two commodity operating systems. Similar to TrustVisor, it is ported to run on top of XMHF as an example hypapp \cite{vasudevan2013design}. Compared to TrustVisor, Lockdown needs to separate more resources, such as I/O devices. Lockdown performs slower and less frequent switches between the trusted and untrusted environments than TrustVisor.
+
+SecVisor \cite{seshadri2007secvisor} is a micro-hypervisor that ensures the code integrity of the rich OS. It uses HPT to ensure that only approved code can execute in kernel mode of the rich OS/Apps. Unlike TrustVisor and Lockdown, SecVisor focuses solely on integrity and does not address secrecy.
+
+Wimpy kernel \cite{zhou2014dancing} is a micro-kernel that implements on-demand I/O isolation. Custom security-sensitive programs that require isolated I/O can run on the wimpy kernel. This project uses XMHF to implement a micro-hypervisor that separates the wimpy kernel from the rich OS/Apps.
+
+\cite{vasudevan2016uberspark} redesigns XMHF into {\"u}XMHF. {\"u}XMHF supports multiple hypapps, while XMHF supports only one hypapp. {\"u}XMHF follows a different approach toward formal verification compared to XMHF. {\"u}XMHF uses Frama-C to formally verify multiple security properties, including control-flow integrity and memory integrity. In contrast, XMHF uses CBMC to verify only the memory integrity property.
+
+CloudVisor \cite{zhang2011cloudvisor} is a micro-hypervisor that virtualizes the hardware virtualization extension. It runs a commodity hypervisor in guest mode and protects the security of the guest VMs of the commodity hypervisor. For example, CloudVisor prevents the commodity hypervisor from accessing secrets in its guest VMs. In contrast, \XMHF64 does not provide additional security to the guest VMs.
+
+Bareflank \cite{bareflank} is a micro-hypervisor framework written in C++ that enables developers to implement custom micro-hypervisor logic in an extension. It satisfies modern OS compatibility requirements, including 64-bit support and Unified Extensible Firmware Interface (UEFI) booting. Unlike XMHF and \XMHF64, Bareflank supports running multiple rich OSes natively. However, as far as we know, Bareflank is not designed to be formally verified.
+

@@ -1,0 +1,49 @@
+\section{Compatibility}
+\label{sec:evaluation_compatibility}
+
+We list the rich OSes that are compatible with \XMHF64 and the hardware platforms on which \XMHF64 can run. Since \XMHF64 adds support for nested virtualization, we also list the general-purpose hypervisors that can run in \XMHF64.
+
+\subsection{Rich OS Compatibility}
+
+\cite{vasudevan2013design} evaluates XMHF using Ubuntu 12.04 LTS, which is released in 2012. However, this version of Ubuntu is no longer supported by its vendor, which raises practicality and security challenges. As shown in \ref{tab:evaluation_compatible_os}, XMHF does not support modern operating systems such as Debian 11 and Windows 10. Many modern operating systems require 64-bit mode, but XMHF only supports 32-bit mode.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_eval_comp_os}
+	\caption{Rich OS compatibility of XMHF and \XMHF64.}
+	\label{tab:evaluation_compatible_os}
+	\end{center}
+\end{table}
+
+In contrast, \XMHF64 supports a number of modern operating systems. For Linux distributions, \XMHF64 supports Debian 11 and Fedora 35. We anticipate that \XMHF64 supports other Linux distributions because all Linux distributions share the same kernel code. For Windows, \XMHF64 supports recent Windows versions from Windows 7 to Windows 10. Unfortunately, \XMHF64 does not support Windows 11, which requires UEFI booting.
+
+\subsection{Hardware Compatibility}
+
+For hardware compatibility, we test XMHF and \XMHF64 on three machines. The test results are shown in \ref{tab:evaluation_compatible_hw}. XMHF can only run on the HP EliteBook 2540p. The newer machines use TPM 2.0, which is not supported by XMHF.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_eval_comp_hw}
+	\caption{Hardware compatibility of XMHF and \XMHF64.}
+	\label{tab:evaluation_compatible_hw}
+	\end{center}
+\end{table}
+
+\XMHF64 supports TPM 2.0, so it can run on both the HP EliteBook 2540p and the Dell OptiPlex 7050. However, \XMHF64 cannot run on the HP EliteBook 840 Aero G8 because this machine requires UEFI booting, a feature that \XMHF64 does not currently support.
+
+\XMHF64 can run in KVM by disabling certain features not supported by KVM, like DRTM. This allows more efficient development of \XMHF64 and hypapps. Booting \XMHF64 in KVM is faster compared to physical hardware, and KVM provides debugging support using GDB. We expect \XMHF64 to be able to run in other hypervisors like VMware and VirtualBox, but we have not tested these configurations yet.
+
+\subsection{General-Purpose Hypervisor Compatibility}
+
+XMHF does not support virtualization of the hardware virtualization extension, therefore it cannot run general-purpose hypervisors. However, \XMHF64 does support virtualization of the hardware virtualization extension. As shown in \ref{tab:evaluation_compatible_hv}, multiple popular general-purpose hypervisors are compatible with \XMHF64. \XMHF64 supports cross-platform general-purpose hypervisors such as VirtualBox and VMware Workstation, as well as platform-specific general-purpose hypervisors such as KVM and Hyper-V.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_eval_comp_hv}
+	\caption{General-purpose hypervisor compatibility of XMHF and \XMHF64.}
+	\label{tab:evaluation_compatible_hv}
+	\end{center}
+\end{table}
+
+Windows 10 allows the user to enable virtualization-based security (VBS), which leverages the hardware virtualization extension to achieve security properties in Windows. Hyper-V serves as the hypervisor in VBS's architecture \cite{yosifovich2017windows}. After virtualizing the hardware virtualization extension, \XMHF64 is one step closer to supporting VBS. However, VBS also requires UEFI booting and IOMMU virtualization \cite{windows_vbs}, which are not yet supported by \XMHF64. Thus, we are unable to enable VBS in Windows 10 running in \XMHF64.
+

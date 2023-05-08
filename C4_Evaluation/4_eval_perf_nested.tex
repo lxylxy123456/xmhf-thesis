@@ -1,0 +1,63 @@
+\section{Performance of 64-bit and Virtualizing the Hardware Virtualization Extension}
+\label{sec:evaluation_perf_nested}
+
+In this section, we measure the performance of \XMHF64's 64-bit support and hardware virtualization extension virtualization. We compare the performance of \XMHF64 with other popular hypervisors: VirtualBox, VMware, and KVM. We compile \XMHF64 using GCC's O3 optimization. We use a Dell OptiPlex 7050 with a quad-core i5-7600 CPU running at 3.50GHz and an HDD as the underlying hardware.
+
+We use the same rich OS/Apps and TrustVisor benchmarks as in Section~\ref{sec:evaluation_perf_xmhf} to measure the performance. The rich OS used in all virtualization levels is Debian 11 with kernel version 5.10.0-21 (64-bit) and without a graphical user interface. Swapping is disabled to accurately measure the memory performance. The rich OS and guest VMs running the benchmarks always have 2 GiB of memory and 4 CPUs. For each level of virtualization, we add 1 GiB of memory to the rich OS to account for the memory overhead of the general-purpose hypervisor or micro-hypervisor. \ref{tab:evaluation_nested_confs} shows the list of configurations we run.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_eval_nested_conf}
+	\caption{Configurations for evaluating the performance of \XMHF64.}
+	\label{tab:evaluation_nested_confs}
+	\end{center}
+\end{table}
+
+\subsection{Rich OS/Apps Benchmarks}
+
+We still use sysbench \cite{kopytov2020sysbench} to measure the CPU and memory performance and IOzone \cite{norcott2003iozone} to measure file IO performance.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone[width=\textwidth]{sysbench_nested_01}
+	\end{center}
+	\caption[L1/mL1 Rich OS/Apps performance with single level of virtualization, normalized to native performance.]{L1/mL1 Rich OS/Apps performance with single level of virtualization. \XMHF64 is compiled in 64-bit mode with O3 optimization. Normalized to native performance (with configuration 0).}
+	\label{fig:sysbench_nested_01}
+\end{figure}
+
+First, we measure the performance of single level of virtualization. We measure the performance of configurations 1b (VirtualBox), 1k (KVM), 1w (VMware), and 1x (\XMHF64). We normalize all performance measurements to configuration 0 (running Debian on bare metal). The results are shown in \ref{fig:sysbench_nested_01}, which indicates that \XMHF64 has close to 100\% performance. The general-purpose hypervisors have notable performance overhead on memory and file IO benchmarks.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone[width=\textwidth]{sysbench_nested_12}
+	\end{center}
+	\caption[L2 Guest VMs performance with two levels of virtualization, normalized to KVM performance.]{L2 Guest VMs performance with two levels of virtualization. KVM runs in L1/mL1. Different hypervisors or \XMHF64 runs in L0/mL0. \XMHF64 is compiled in 64-bit mode with O3 optimization. Normalized to KVM performance (with configuration 1k).}
+	\label{fig:sysbench_nested_12}
+\end{figure}
+
+We then measure the performance of two levels of virtualization using KVM as the hypervisor in L1/mL1. We measure the performance of configurations 2bk (running VirtualBox in L0), 2kk (running KVM in L0), 2wk (running VMware in L0), and 2xk (running \XMHF64 in mL0). To highlight the performance overhead of nested virtualization (for general-purpose hypervisors) and virtualizing the hardware virtualization extension (for \XMHF64), we normalize all performance measurements to configuration 1k (running KVM on bare metal). The results are shown in \ref{fig:sysbench_nested_12}. We can see that \XMHF64 still achieves close to 100\% performance. However, for unknown reasons, our file IO benchmark reports slightly higher than 100\% performance for 2xk compared to 1k. We leave the investigation of this phenomenon as future work. The general-purpose hypervisors have notable performance overhead on memory and file IO benchmarks.
+
+\begin{figure}[tbp]
+	\begin{center}
+	\includestandalone[width=\textwidth]{sysbench_nested_02}
+	\end{center}
+	\caption[L2 Guest VMs performance with two levels of virtualization, normalized to native performance.]{L2 Guest VMs performance with two levels of virtualization. KVM runs in L1/mL1. Different hypervisors or \XMHF64 runs in L0/mL0. \XMHF64 is compiled in 64-bit mode with O3 optimization. Normalized to native performance (with configuration 0).}
+	\label{fig:sysbench_nested_02}
+\end{figure}
+
+In \ref{fig:sysbench_nested_02}, we compare the performance of configurations 2bk, 2kk, 2wk, and 2xk with native performance (i.e. configuration 0). We can see that \XMHF64's L2 guest VMs have 10\% or less performance overhead compared to native performance. Note that this figure only shows the combined performance overhead of two levels of virtualization. The performance overhead of KVM, which runs in L1/mL1, is shown in \ref{fig:sysbench_nested_01}. The performance overhead of hypervisors and \XMHF64, which run in L0/mL0, is shown in \ref{fig:sysbench_nested_12}.
+
+\subsection{TrustVisor Benchmarks}
+
+We run the same TrustVisor benchmark as in Section~\ref{sec:evaluation_perf_xmhf_tv}. We run the benchmark in configurations 1x (\XMHF64 only) and 2xk (KVM in \XMHF64). This allows us to compare the performance of interacting with PALs from guest VMs and from the rich OS/Apps.
+
+\begin{table}[tbp]
+	\begin{center}
+	\includestandalone{tab_palbench_nested}
+	\caption[TrustVisor overhead on \XMHF64 and KVM in \XMHF64.]{TrustVisor overhead on \XMHF64 (configuration 1x) and KVM in \XMHF64 (configuration 2xk). \XMHF64 is compiled in 64-bit mode with O3 optimization. Measured in microsecond per event.}
+	\label{tab:palbench_nested_12}
+	\end{center}
+\end{table}
+
+The benchmark results are shown in \ref{tab:palbench_nested_12}. We can see that compared to configuration 1x, configuration 2xk takes approximately 110\% more time to perform PAL unregistration and 50\% more time to perform other events. Compared to the results in Section~\ref{sec:evaluation_perf_xmhf_tv}, TrustVisor has lower overhead because this benchmark runs on newer hardware.
+

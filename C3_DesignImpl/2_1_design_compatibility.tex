@@ -1,0 +1,19 @@
+\subsection{Compatibility}
+\label{sec:design_compatibility}
+
+Hardware resources consist of CPU, memory, and I/O devices. \XMHF64 must ensure that sharing hardware resources between the rich OS/Apps and \XMHF64 preserves compatibility with the rich OS/Apps.\footnote{The hypapp ensures that sharing hardware resources between the rich OS/Apps and the isolated code preserves compatibility with the rich OS/Apps.} For any hardware resource, \XMHF64 must authorize the rich OS/Apps to access the resource with exactly one of the following three policies.
+
+\begin{itemize}
+
+\item \textbf{Exporting}: For any hardware resource that is not required by \XMHF64, \XMHF64 must export the resource to the rich OS/Apps. This means that they are always allowed to access the hardware resource directly. Note that \XMHF64 exports all I/O devices to the rich OS/Apps because \XMHF64 is a micro-hypervisor and does not perform device virtualization.
+
+\item \textbf{Hiding}: For any hardware resource required by \XMHF64 and not required by the rich OS/Apps, \XMHF64 can hide the resource from them by dropping their access to the resource and reporting that the resource is unavailable. This is because well-behaved rich OS/Apps will then stop using the hardware resource and continue to function properly. However, hiding the resource may break the compatibility of future rich OS/Apps that require the resource.
+For example, \XMHF64 hides the IOMMU from the rich OS/Apps because they can run without the IOMMU. Virtualization of the IOMMU in \XMHF64 is left as future work.
+
+\item \textbf{Virtualizing}: For any hardware resource required by both \XMHF64 and the rich OS/Apps, \XMHF64 must virtualize the resource, ensure the resource virtualization does not violate its security properties, and emulate the resource for all secure accesses.
+For example, \XMHF64 virtualizes non-maskable interrupts (NMIs) because \XMHF64 implements quiescing through NMIs, and the rich OS/Apps require NMIs.
+
+\end{itemize}
+
+To make \XMHF64 compatible with rich OS/Apps, we first identify all hardware resources required by \XMHF64. For each resource, we decide whether to virtualize or hide the resource. Then we export all hardware resources not required by \XMHF64 to the rich OS/Apps.
+

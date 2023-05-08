@@ -1,0 +1,31 @@
+\documentclass{standalone}
+
+\begin{document}
+
+\input{Pictures/common}%
+
+\begin{tabular}{ l | l }\hline
+Vendor & Bug Description \\ \hline
+QEMU\footnotemark & Assertion error related to break points while debugging KVM\footnotemark \\
+QEMU & Assertion error while debugging SMM code in KVM\footnotemark \\
+KVM\footnotemark & Incorrect check in nested virtualization\footnotemark \\
+KVM & EOI may be ignored in x2APIC\footnotemark \\
+KVM & KVM bug detected in nested virtualization\footnotemark \\
+KVM & Some VMCS fields are missing from VMCS12\footnotemark \\
+KVM & Incorrect handling of PDPTE in nested virtualization\footnotemark \\
+KVM & Incorrect handling of REP INS instructions in nested virtualization\footnotemark \\
+lmm\footnotemark & Assertion error in memory allocator\footnotemark \\
+Pathos\footnotemark & Incorrect handling of spurious IRQ\footnotemark \\
+GCC\footnotemark & False positive in static analysis\footnotemark \\
+GCC & False negative in static analysis\footnotemark \\
+KVM & Incorrect handling of NMI blocking in nested virtualization\footnotemark \\
+Bochs\footnotemark & Incorrect handling of NMI blocking in VMX emulation\footnotemark \\
+VMware\footnotemark & Incorrect handling of NMI blocking in nested virtualization\footnotemark \\
+KVM & Incorrect emulation of LOCK instruction in MMIO\footnotemark \\
+VMware & Incorrect emulation of LOCK instruction in MMIO\footnotemark \\
+Intel\footnotemark & Typo in Software Developer Manuals (SDM)\footnotemark \\
+Intel & Typo in Intel TXT software development guide\footnotemark \\
+\end{tabular}
+
+\end{document}
+
